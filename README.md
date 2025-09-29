@@ -15,11 +15,6 @@ npm run dev
 
 Abre la URL que aparezca (por ejemplo: http://localhost:5173).
 
-## Construir para entrega
-```bash
-npm run build
-npm run preview
-```
 
 ## Notas
 - Usa fetch con POST y FormData (sin Axios).
