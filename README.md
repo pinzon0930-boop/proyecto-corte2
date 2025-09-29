@@ -1,4 +1,4 @@
-# Proyecto: Reconocimiento de dígitos (principiante)
+# Proyecto: Reconocimiento de dígitos
 
 ## Requisitos previos
 - Node.js LTS (incluye npm)
