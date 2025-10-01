@@ -1,14 +1,17 @@
+// Página de Historial: lee LocalStorage y muestra la lista
 import { useEffect, useState } from "react";
 import { LogEntry } from "../types";
 import { clearLog, readLog } from "../utils/localStorageLog";
 
 export default function HistoryPage() {
-  const [items, setItems] = useState<LogEntry[]>([]);
+  const [items, setItems] = useState<LogEntry[]>([]); // lista de registros
 
+   // Cargar historial al entrar en la página
   useEffect(() => {
     setItems(readLog());
   }, []);
 
+  // Limpia todo y refresca
   function onClear() {
     clearLog();
     setItems([]);
@@ -26,9 +29,12 @@ export default function HistoryPage() {
         </button>
       </div>
 
+      {/* Si no hay items, mensaje simple */}
       {items.length === 0 ? (
         <p className="text-sm text-gray-600 mt-3">No hay registros aún.</p>
       ) : (
+        
+        // Lista de items del más nuevo al más viejo
         <ul className="mt-3 space-y-3">
           {items.map((it) => (
             <li key={it.id} className="border rounded p-3">
@@ -37,6 +43,8 @@ export default function HistoryPage() {
               </div>
               <div className="text-sm">
                 <p><b>invert:</b> {it.request.invert} | <b>archivo:</b> {it.request.filename}</p>
+                
+                {/* Muestra respuesta o error */}
                 {it.response ? (
                   <p className="mt-1">
                     <b>prediction:</b> {it.response.prediction} |

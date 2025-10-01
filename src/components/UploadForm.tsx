@@ -1,18 +1,21 @@
+// Formulario: selecciona invert, sube imagen y hace el POST
 import { useEffect, useState } from "react";
 import { ImageRecognitionResponse, LogEntry } from "../types";
 import { addLog } from "../utils/localStorageLog";
 
+// URL del endpoint de la API
 const ENDPOINT = "http://ec2-54-81-142-28.compute-1.amazonaws.com:8080/predict";
 
 export default function UploadForm() {
+  // Estados del formulario y resultado
   const [invert, setInvert] = useState<"true" | "false">("false");
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("");
+  const [preview, setPreview] = useState<string | null>(null); // imagen en miniatura
+  const [status, setStatus] = useState<string>(""); // mensajes al usuario
   const [result, setResult] = useState<ImageRecognitionResponse | null>(null);
-  const [dims, setDims] = useState<{w:number; h:number} | null>(null);
+  const [dims, setDims] = useState<{w:number; h:number} | null>(null); // aviso 28x28
 
-  // vista previa + lectura de dimensiones
+  // Genera y limpia la URL de vista previa
   useEffect(() => {
     if (!file) {
       setPreview(null);
@@ -29,11 +32,13 @@ export default function UploadForm() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  // Cuando el usuario elige un archivo
   async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] || null;
     setFile(f);
   }
 
+  // Envío del formulario con fetch() y FormData
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setResult(null);
@@ -48,10 +53,13 @@ export default function UploadForm() {
     }
 
     setStatus("Enviando...");
-    const formData = new FormData();
-    formData.append("invert", invert);
-    formData.append("image", file);
 
+    // Construye el formulario multipart
+    const formData = new FormData();
+    formData.append("invert", invert); // "true" o "false" como string
+    formData.append("image", file); // archivo
+
+    // Registro base para el historial
     const logBase: LogEntry = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
@@ -59,15 +67,23 @@ export default function UploadForm() {
     };
 
     try {
+      // Llamada POST a la API (sin Axios)
       const res = await fetch(ENDPOINT, { method: "POST", body: formData });
+      
+      // Si la respuesta no es 200-299, lanza error
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+      // Parsea JSON con { prediction, accuracy, process_time }
       const data = (await res.json()) as ImageRecognitionResponse;
+      
+      // Muestra resultado
       setResult(data);
       setStatus("Listo ✅");
 
+      // Guarda éxito en historial
       addLog({ ...logBase, response: data });
     } catch (err: any) {
+      // Muestra y guarda el error (CORS, caído, etc.)
       const msg = `Error: ${err?.message || "no se pudo conectar"}`;
       setStatus(msg);
       addLog({ ...logBase, error: msg });
@@ -82,8 +98,11 @@ export default function UploadForm() {
         "false" si está <b>negro</b> sobre <b>blanco</b>.
       </p>
 
+      {/* Formulario */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-2">
+
+          {/* selector de invert */}
           <label className="flex flex-col gap-1">
             <span className="text-sm">Invert</span>
             <select
@@ -96,6 +115,7 @@ export default function UploadForm() {
             </select>
           </label>
 
+          {/* input de archivo */}
           <label className="flex flex-col gap-1">
             <span className="text-sm">Imagen (PNG/JPG) 28×28</span>
             <input
@@ -107,6 +127,7 @@ export default function UploadForm() {
           </label>
         </div>
 
+        {/* vista previa simple */}
         {preview && (
           <div className="flex items-center gap-4">
             <img
@@ -125,6 +146,7 @@ export default function UploadForm() {
           </div>
         )}
 
+        {/* botón de envío */}
         <button
           type="submit"
           className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700 disabled:opacity-50"
@@ -134,6 +156,7 @@ export default function UploadForm() {
         </button>
       </form>
 
+      {/* estado y resultado */}
       <div className="mt-4 text-sm">
         <p className="mb-1">Estado: {status || "—"}</p>
         {result && (
